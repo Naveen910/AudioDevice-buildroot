@@ -1,0 +1,21 @@
+# 1. Create a local folder for the final images
+mkdir -p build-output
+
+# 2. Run the builder
+mkdir -p dl_cache
+docker run --rm \
+    -v "$(pwd):/workspace" \
+    -v "$(pwd)/build-output:/output" \
+    -v "$(pwd)/dl_cache:/workspace/buildroot/dl" \
+    --user $(id -u):$(id -g) \
+    f1c100s-builder
+
+
+Run ./run.sh
+
+Run ./dev.sh
+make BR2_EXTERNAL=../custom-f1c100s-buildroot menuconfig
+make BR2_EXTERNAL=../custom-f1c100s-buildroot linux-menuconfig
+
+make savedefconfig
+make linux-update-config

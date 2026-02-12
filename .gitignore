@@ -1,0 +1,15 @@
+# Ignore the actual buildroot source code (we clone it in docker)
+buildroot/
+
+# Ignore build artifacts and images
+output/
+build-output/
+dl/
+dl_cache/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Docker build contexts if any (optional)
+.dockerignore
