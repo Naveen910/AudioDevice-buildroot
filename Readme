@@ -41,3 +41,10 @@ make linux-update-config
 ├── 📄 dev.sh
 ├── 📄 entrypoint.sh
 └── 📄 run.sh
+
+
+Component	        To Edit	                        To Save Permanently	                 File Updated
+Buildroot	        make menuconfig	                make savedefconfig	                 configs/my_defconfig
+Linux Kernel	    make linux-menuconfig	        make linux-update-config	         board/linux.config
+BusyBox	            make busybox-menuconfig	        make busybox-update-config	         board/busybox.config*
+U-Boot	            make uboot-menuconfig	        make uboot-update-config	         board/uboot.config*
