@@ -19,3 +19,25 @@ make BR2_EXTERNAL=../custom-f1c100s-buildroot linux-menuconfig
 
 make savedefconfig
 make linux-update-config
+
+# File Tree
+
+📁 AudioDevice-buildroot
+├── 📁 custom-f1c100s-buildroot
+│   ├── 📁 board
+│   │   ├── 📄 boot.cmd
+│   │   ├── 📄 genimage.cfg
+│   │   ├── ⚙️ linux.config
+│   │   ├── 📄 post-image.sh
+│   │   └── 📄 suniv-f1c100s-audio.dts
+│   ├── 📁 configs
+│   │   └── 📄 my_defconfig
+│   ├── 📄 Config.in
+│   ├── 📄 external.desc
+│   └── 📄 external.mk
+├── ⚙️ .gitignore
+├── 🐳 Dockerfile
+├── 📄 Readme
+├── 📄 dev.sh
+├── 📄 entrypoint.sh
+└── 📄 run.sh
