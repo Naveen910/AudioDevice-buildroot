@@ -1,6 +1,6 @@
 # Ignore the actual buildroot source code (we clone it in docker)
 buildroot/
-
+buildroot-2023.02.9.tar.gz
 # Ignore build artifacts and images
 output/
 build-output/
