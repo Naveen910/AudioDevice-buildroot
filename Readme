@@ -14,8 +14,9 @@ docker run --rm \
 Run ./run.sh
 
 Run ./dev.sh
-make BR2_EXTERNAL=../custom-f1c100s-buildroot menuconfig
-make BR2_EXTERNAL=../custom-f1c100s-buildroot linux-menuconfig
+cd buildroot
+make menuconfig
+make linux-menuconfig
 
 make savedefconfig
 make linux-update-config
