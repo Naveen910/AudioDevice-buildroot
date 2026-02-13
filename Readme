@@ -1,25 +1,15 @@
 # 1. Create a local folder for the final images
 mkdir -p build-output
-
+docker build -t f1c100s-buildroot .
 # 2. Run the builder
-mkdir -p dl_cache
-docker run --rm \
-    -v "$(pwd):/workspace" \
-    -v "$(pwd)/build-output:/output" \
-    -v "$(pwd)/dl_cache:/workspace/buildroot/dl" \
-    --user $(id -u):$(id -g) \
-    f1c100s-builder
+docker run --rm -it \
+  -v "$(pwd)":/project \
+  -w /project \
+  -e TAR_OPTIONS=--no-same-owner \
+  f1c100s-buildroot \
+  ./build.sh
 
 
-Run ./run.sh
-
-Run ./dev.sh
-cd buildroot
-make menuconfig
-make linux-menuconfig
-
-make savedefconfig
-make linux-update-config
 
 # File Tree
 
@@ -52,7 +42,7 @@ U-Boot	            make uboot-menuconfig	        make uboot-update-config	      
 
 
 
-docker build -t my-firmware-image .
+
 
 2. Extract the Image (sdcard.img)
 After the build finishes, your firmware image is trapped inside the Docker image. You need to copy it out to your Mac.
@@ -78,3 +68,8 @@ Bash
 docker run -it --rm -v $(pwd)/custom-f1c100s-buildroot:/workspace/custom-f1c100s-buildroot my-firmware-image bash
 
 make menuconfig
+
+docker run --rm -it \
+  -v "$(pwd)"/custom-f1c100s-buildroot:/workspace/custom-f1c100s-buildroot \
+  -e FORCE_UNSAFE_CONFIGURE=1 \
+  f1c100s-buildroot bash

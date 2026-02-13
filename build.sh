@@ -16,18 +16,25 @@ if [ ! -d "$BUILDROOT_DIR" ]; then
 fi
 
 # ---- Buildroot commands ----
+mkdir -p /tmp/br-output /tmp/br-dl
 cd ${BUILDROOT_DIR}
 
-echo "Loading external defconfig..."
-make BR2_EXTERNAL=../${EXTERNAL_DIR} my_defconfig
+make O=/tmp/br-output \
+     BR2_DL_DIR=/tmp/br-dl \
+     BR2_EXTERNAL=../custom-f1c100s-buildroot \
+     my_defconfig
 
-echo "Opening Buildroot menuconfig..."
-make menuconfig
+make O=/tmp/br-output \
+     BR2_EXTERNAL=../custom-f1c100s-buildroot \
+     menuconfig
 
-echo "Opening Linux kernel menuconfig..."
-make linux-menuconfig
+make O=/tmp/br-output \
+     BR2_EXTERNAL=../custom-f1c100s-buildroot \
+     linux-menuconfig
 
-echo "Building Buildroot..."
-make
+#make O=/tmp/br-output \
+#    BR2_EXTERNAL=../custom-f1c100s-buildroot
+
+#cp -r /tmp/br-output/images ../output-images
 
 echo "Build completed!"
