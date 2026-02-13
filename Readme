@@ -49,3 +49,32 @@ Buildroot	        make menuconfig	                make savedefconfig	           
 Linux Kernel	    make linux-menuconfig	        make linux-update-config	         board/linux.config
 BusyBox	            make busybox-menuconfig	        make busybox-update-config	         board/busybox.config*
 U-Boot	            make uboot-menuconfig	        make uboot-update-config	         board/uboot.config*
+
+
+
+docker build -t my-firmware-image .
+
+2. Extract the Image (sdcard.img)
+After the build finishes, your firmware image is trapped inside the Docker image. You need to copy it out to your Mac.
+
+Bash
+# Create a dummy container from your image (don't run it, just create it)
+docker create --name temp-container my-firmware-image
+
+# Copy the images folder out to your Mac
+docker cp temp-container:/workspace/buildroot/output/images ./output-images
+
+# Delete the dummy container
+docker rm temp-container
+
+
+
+How to Edit Menuconfig (The Hybrid Workflow)
+Since you can't run menuconfig during the build, if you need to change settings, you use an ephemeral container:
+
+Run a temporary shell:
+
+Bash
+docker run -it --rm -v $(pwd)/custom-f1c100s-buildroot:/workspace/custom-f1c100s-buildroot my-firmware-image bash
+
+make menuconfig

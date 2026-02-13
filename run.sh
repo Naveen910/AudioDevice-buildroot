@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. Build the Docker image (only needs to happen once, but safe to run repeatedly)
-docker build -t audio-builder .
+docker build -t audio-builder-base .
 
 # 2. Create local output directory
 mkdir -p build-output
@@ -13,4 +13,4 @@ docker run --rm \
     -v "$(pwd):/workspace" \
     -v "$(pwd)/build-output:/output" \
     --user $(id -u):$(id -g) \
-    audio-builder
+    audio-builder-base
