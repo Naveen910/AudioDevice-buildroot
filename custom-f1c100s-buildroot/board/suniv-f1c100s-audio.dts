@@ -1,179 +1,191 @@
 /dts-v1/;
-#include "suniv-f1c100s.dtsi"
-#include <dt-bindings/gpio/gpio.h>
 
 / {
-    model = "F1C100s Custom FM Radio Board";
-    compatible = "custom,f1c100s-radio", "allwinner,suniv-f1c100s";
+	model = "F1C100s Custom Audio Board";
+	compatible = "custom,audio-board", "allwinner,suniv-f1c100s";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&intc>;
 
-    aliases {
-        serial0 = &uart0;
-        mmc0 = &mmc0;
-    };
+	aliases {
+		serial0 = &uart0;
+		i2c0 = &i2c0;
+	};
 
-    chosen {
-        stdout-path = "serial0:115200n8";
-    };
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
 
-    /* DMA Controller (Required for Audio) */
-    dma: dma-controller@1c02000 {
-        compatible = "allwinner,suniv-f1c100s-dma";
-        reg = <0x01c02000 0x1000>;
-        interrupts = <18>;
-        clocks = <&ccu 14>;
-        resets = <&ccu 6>;
-        #dma-cells = <2>;
-    };
+	/* Regulator: Fixed 3.3V */
+	reg_vcc3v3: vcc3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
 
-    /* Internal Codec (Analog) */
-    codec: codec@1c23c00 {
-        compatible = "allwinner,suniv-f1c100s-codec", "allwinner,sun4i-a10-codec";
-        reg = <0x01c23c00 0x400>;
-        interrupts = <21>;
-        clocks = <&ccu 29>, <&ccu 65>;
-        clock-names = "apb", "codec";
-        resets = <&ccu 39>;
-        dmas = <&dma 0 12>, <&dma 0 12>;
-        dma-names = "rx", "tx";
-        status = "okay";
-    };
+	/* MAX98357A External Amplifier */
+	max98357a: max98357a {
+		compatible = "maxim,max98357a";
+		#sound-dai-cells = <0>;
+	};
 
-    /* I2S/Digital Audio Controller */
-    daudio0: i2s@1c22000 {
-        compatible = "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
-        reg = <0x01c22000 0x400>;
-        clocks = <&ccu 33>, <&ccu 47>;
-        clock-names = "apb", "mod";
-        resets = <&ccu 34>;
-        dmas = <&dma 0 3>, <&dma 0 3>;
-        dma-names = "rx", "tx";
-        pinctrl-names = "default";
-        pinctrl-0 = <&daudio0_pd_pins>;
-        status = "okay";
-    };
+	/* Sound Card Configuration */
+	sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "F1C100s-MAX98357A";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <512>;
+		
+		simple-audio-card,bitclock-master = <&dailink_master>;
+		simple-audio-card,frame-master = <&dailink_master>;
 
-    max98357a: max98357a {
-        compatible = "maxim,max98357a";
-        #sound-dai-cells = <0>;
-    };
+		dailink_master: simple-audio-card,cpu {
+			sound-dai = <&i2s0>;
+		};
 
-    sound_i2s {
-        compatible = "simple-audio-card";
-        simple-audio-card,name = "F1C100s-Speaker";
-        simple-audio-card,format = "i2s";
-        simple-audio-card,bitclock-master = <&cpu_dai>;
-        simple-audio-card,frame-master = <&cpu_dai>;
+		simple-audio-card,codec {
+			sound-dai = <&max98357a>;
+		};
+	};
 
-        cpu_dai: simple-audio-card,cpu {
-            sound-dai = <&daudio0>;
-        };
+	/* SOC DEFINITIONS */
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
 
-        codec_dai: simple-audio-card,codec {
-            sound-dai = <&max98357a>;
-        };
-    };
+		/* Interrupt Controller */
+		intc: interrupt-controller@1c20400 {
+			compatible = "allwinner,suniv-f1c100s-ic";
+			reg = <0x01c20400 0x400>;
+			interrupt-controller;
+			#interrupt-cells = <1>;
+		};
 
-    gpio-keys {
-        compatible = "gpio-keys";
-        autorepeat;
+		/* Clock Control Unit */
+		ccu: clock@1c20000 {
+			compatible = "allwinner,suniv-f1c100s-ccu";
+			reg = <0x01c20000 0x400>;
+			clocks = <&osc24M>;
+			clock-names = "hosc";
+			#clock-cells = <1>;
+			#reset-cells = <1>;
+		};
 
-        button-b1 {
-            label = "B1";
-            linux,code = <59>;
-            gpios = <&pio 3 2 GPIO_ACTIVE_LOW>;
-        };
-        button-b2 {
-            label = "B2";
-            linux,code = <60>;
-            gpios = <&pio 3 3 GPIO_ACTIVE_LOW>;
-        };
-        button-b3 {
-            label = "B3";
-            linux,code = <61>;
-            gpios = <&pio 3 4 GPIO_ACTIVE_LOW>;
-        };
-        button-b4 {
-            label = "B4";
-            linux,code = <62>;
-            gpios = <&pio 3 5 GPIO_ACTIVE_LOW>;
-        };
-        button-b5 {
-            label = "B5";
-            linux,code = <63>;
-            gpios = <&pio 3 6 GPIO_ACTIVE_LOW>;
-        };
-        button-b6 {
-            label = "B6";
-            linux,code = <64>;
-            gpios = <&pio 3 7 GPIO_ACTIVE_LOW>;
-        };
-        button-b7 {
-            label = "B7";
-            linux,code = <65>;
-            gpios = <&pio 3 15 GPIO_ACTIVE_LOW>;
-        };
-        button-b8 {
-            label = "B8";
-            linux,code = <66>;
-            gpios = <&pio 3 16 GPIO_ACTIVE_LOW>;
-        };
-        button-b9 {
-            label = "B9";
-            linux,code = <67>;
-            gpios = <&pio 3 17 GPIO_ACTIVE_LOW>;
-        };
-        button-b10 {
-            label = "B10";
-            linux,code = <68>;
-            gpios = <&pio 3 18 GPIO_ACTIVE_LOW>;
-        };
-        button-b11 {
-            label = "B11";
-            linux,code = <69>;
-            gpios = <&pio 3 19 GPIO_ACTIVE_LOW>;
-        };
-    };
-};
+		/* Pin Controller (PIO) */
+		pio: pinctrl@1c20800 {
+			compatible = "allwinner,suniv-f1c100s-pinctrl";
+			reg = <0x01c20800 0x400>;
+			interrupts = <38>, <39>, <40>;
+			
+			/* CLOCKS: CLK_BUS_PIO (19), osc24M, osc32k */
+			clocks = <&ccu 19>, <&osc24M>, <&osc32k>;
+			clock-names = "apb", "hosc", "losc";
+			gpio-controller;
+			interrupt-controller;
+			#interrupt-cells = <3>;
+			#gpio-cells = <3>;
 
-/soc/i2c@1c27000 {
-    pinctrl-names = "default";
-    pinctrl-0 = <&i2c0_pe_pins>;
-    status = "okay";
+			/* Pin Groups */
+			uart0_pe_pins: uart0-pe-pins {
+				pins = "PE0", "PE1";
+				function = "uart0";
+			};
 
-    si4703: fm-radio@10 {
-        compatible = "silabs,si470x";
-        reg = <0x10>;
-        reset-gpios = <&pio 3 0 1>;
-        interrupt-parent = <&pio>;
-        interrupts = <3 1 2>;
-        status = "okay";
-    };
-};
+			i2c0_pe_pins: i2c0-pe-pins {
+				pins = "PE8", "PE9";
+				function = "i2c0";
+				bias-pull-up;
+			};
 
-&mmc0 {
-    pinctrl-names = "default";
-    pinctrl-0 = <&mmc0_pins>;
-    bus-width = <4>;
-    broken-cd;
-    status = "okay";
-};
+			i2s0_pe_pins: i2s0-pe-pins {
+				pins = "PE11", "PE12", "PE13";
+				function = "i2s";
+			};
+		};
 
-&uart0 {
-    pinctrl-names = "default";
-    pinctrl-0 = <&uart0_pe_pins>;
-    status = "okay";
-};
+		/* UART0 */
+		uart0: serial@1c25000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x01c25000 0x400>;
+			interrupts = <1>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			/* CLK_BUS_UART0 (20) */
+			clocks = <&ccu 20>;
+			/* RST_BUS_UART0 (6) */
+			resets = <&ccu 6>;
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart0_pe_pins>;
+		};
 
-&pio {
-    daudio0_pd_pins: daudio0-pd-pins {
-        pins = "PD8", "PD9", "PD11";
-        function = "i2s";
-        bias-disable;
-    };
+		/* I2C0 */
+		i2c0: i2c@1c27000 {
+			compatible = "allwinner,suniv-f1c100s-i2c", "allwinner,sun6i-a31-i2c";
+			reg = <0x01c27000 0x400>;
+			interrupts = <7>;
+			/* CLK_BUS_I2C0 (24) */
+			clocks = <&ccu 24>;
+			/* RST_BUS_I2C0 (11) */
+			resets = <&ccu 11>;
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c0_pe_pins>;
 
-    i2c0_pe_pins: i2c0-pe-pins {
-        pins = "PE11", "PE12";
-        function = "i2c0";
-        bias-pull-up;
-    };
+			/* FM Radio */
+			si4703: fm-radio@10 {
+				compatible = "silabs,si470x";
+				reg = <0x10>;
+				/* Reset: Port 4 (PE), Pin 10, Active Low (1) */
+				reset-gpios = <&pio 4 10 1>; 
+			};
+		};
+
+		/* I2S0 */
+		i2s0: i2s@1c22000 {
+			compatible = "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
+			reg = <0x01c22000 0x400>;
+			interrupts = <28>;
+			/* CLK_BUS_I2S0 (22), CLK_I2S0 (47) */
+			clocks = <&ccu 22>, <&ccu 47>;
+			clock-names = "apb", "mod";
+			/* RST_BUS_I2S0 (9) */
+			resets = <&ccu 9>;
+			dmas = <&dma 3>, <&dma 3>;
+			dma-names = "rx", "tx";
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2s0_pe_pins>;
+		};
+
+		/* DMA Controller */
+		dma: dma-controller@1c02000 {
+			compatible = "allwinner,suniv-f1c100s-dma";
+			reg = <0x01c02000 0x1000>;
+			interrupts = <18>;
+			/* CLK_BUS_DMA (6) */
+			clocks = <&ccu 6>;
+			/* RST_BUS_DMA (4) */
+			resets = <&ccu 4>;
+			#dma-cells = <1>;
+		};
+	};
+
+	/* Root Clocks */
+	osc24M: osc24M_clk {
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <24000000>;
+		clock-output-names = "osc24M";
+	};
+
+	osc32k: osc32k_clk {
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <32768>;
+		clock-output-names = "osc32k";
+	};
 };

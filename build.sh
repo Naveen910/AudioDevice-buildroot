@@ -67,5 +67,8 @@ make O="$O" \
      BR2_DL_DIR="$DL" \
      BR2_EXTERNAL="../${EXTERNAL_DIR}"
 
+mkdir -p ../output-images
+cp -r "$O/images/"* ../output-images/
+
 echo "Build completed successfully!"
-echo "Output images are in: $O/images"
+echo "Images copied to: output-images/"
