@@ -1,4 +1,6 @@
 /dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 
 / {
 	model = "F1C100s Custom Audio Board";
@@ -16,7 +18,33 @@
 		stdout-path = "serial0:115200n8";
 	};
 
-	/* Regulator: Fixed 3.3V */
+	clocks {
+		osc24M: clk-24M {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <24000000>;
+			clock-output-names = "osc24M";
+		};
+
+		osc32k: clk-32k {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <32768>;
+			clock-output-names = "osc32k";
+		};
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "arm,arm926ej-s";
+			device_type = "cpu";
+			reg = <0x0>;
+		};
+	};
+
 	reg_vcc3v3: vcc3v3 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc3v3";
@@ -49,12 +77,115 @@
 		};
 	};
 
+	gpio-keys {
+        compatible = "gpio-keys";
+        autorepeat;
+
+        button-b1 {
+            label = "B1";
+            linux,code = <59>;
+            gpios = <&pio 3 2 GPIO_ACTIVE_LOW>;
+        };
+        button-b2 {
+            label = "B2";
+            linux,code = <60>;
+            gpios = <&pio 3 3 GPIO_ACTIVE_LOW>;
+        };
+        button-b3 {
+            label = "B3";
+            linux,code = <61>;
+            gpios = <&pio 3 4 GPIO_ACTIVE_LOW>;
+        };
+        button-b4 {
+            label = "B4";
+            linux,code = <62>;
+            gpios = <&pio 3 5 GPIO_ACTIVE_LOW>;
+        };
+        button-b5 {
+            label = "B5";
+            linux,code = <63>;
+            gpios = <&pio 3 6 GPIO_ACTIVE_LOW>;
+        };
+        button-b6 {
+            label = "B6";
+            linux,code = <64>;
+            gpios = <&pio 3 7 GPIO_ACTIVE_LOW>;
+        };
+        button-b7 {
+            label = "B7";
+            linux,code = <65>;
+            gpios = <&pio 3 15 GPIO_ACTIVE_LOW>;
+        };
+        button-b8 {
+            label = "B8";
+            linux,code = <66>;
+            gpios = <&pio 3 16 GPIO_ACTIVE_LOW>;
+        };
+        button-b9 {
+            label = "B9";
+            linux,code = <67>;
+            gpios = <&pio 3 17 GPIO_ACTIVE_LOW>;
+        };
+        button-b10 {
+            label = "B10";
+            linux,code = <68>;
+            gpios = <&pio 3 18 GPIO_ACTIVE_LOW>;
+        };
+        button-b11 {
+            label = "B11";
+            linux,code = <69>;
+            gpios = <&pio 3 19 GPIO_ACTIVE_LOW>;
+        };
+    };
+
 	/* SOC DEFINITIONS */
 	soc {
 		compatible = "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
+
+		sram-controller@1c00000 {
+			compatible = "allwinner,suniv-f1c100s-system-control",
+				     "allwinner,sun4i-a10-system-control";
+			reg = <0x01c00000 0x30>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+
+			sram_d: sram@10000 {
+				compatible = "mmio-sram";
+				reg = <0x00010000 0x1000>;
+				#address-cells = <1>;
+				#size-cells = <1>;
+				ranges = <0 0x00010000 0x1000>;
+
+				otg_sram: sram-section@0 {
+					compatible = "allwinner,suniv-f1c100s-sram-d",
+						     "allwinner,sun4i-a10-sram-d";
+					reg = <0x0000 0x1000>;
+					status = "disabled";
+				};
+			};
+		};
+
+		mmc0: mmc@1c0f000 {
+			compatible = "allwinner,suniv-f1c100s-mmc", "allwinner,sun7i-a20-mmc";
+			reg = <0x01c0f000 0x1000>;
+			/* IDs: BUS=7, MOD=29, OUT=30, SAMPLE=31 */
+			clocks = <&ccu 7>, <&ccu 29>, <&ccu 30>, <&ccu 31>;
+			clock-names = "ahb", "mmc", "output", "sample";
+			/* Reset ID: 5 */
+			resets = <&ccu 5>;
+			reset-names = "ahb";
+			interrupts = <23>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&mmc0_pins>;
+			status = "okay";
+			bus-width = <4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
 
 		/* Interrupt Controller */
 		intc: interrupt-controller@1c20400 {
@@ -68,8 +199,8 @@
 		ccu: clock@1c20000 {
 			compatible = "allwinner,suniv-f1c100s-ccu";
 			reg = <0x01c20000 0x400>;
-			clocks = <&osc24M>;
-			clock-names = "hosc";
+			clocks = <&osc24M>, <&osc32k>;
+			clock-names = "hosc", "losc";
 			#clock-cells = <1>;
 			#reset-cells = <1>;
 		};
@@ -88,6 +219,12 @@
 			#interrupt-cells = <3>;
 			#gpio-cells = <3>;
 
+			mmc0_pins: mmc0-pins {
+				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
+				function = "mmc0";
+				drive-strength = <30>;
+			};
+
 			/* Pin Groups */
 			uart0_pe_pins: uart0-pe-pins {
 				pins = "PE0", "PE1";
@@ -95,13 +232,13 @@
 			};
 
 			i2c0_pe_pins: i2c0-pe-pins {
-				pins = "PE8", "PE9";
+				pins = "PE11", "PE12";
 				function = "i2c0";
 				bias-pull-up;
 			};
 
-			i2s0_pe_pins: i2s0-pe-pins {
-				pins = "PE11", "PE12", "PE13";
+			i2s0_pd_pins: i2s0-pd-pins {
+				pins = "PD8", "PD9", "PD11";
 				function = "i2s";
 			};
 		};
@@ -140,7 +277,7 @@
 				compatible = "silabs,si470x";
 				reg = <0x10>;
 				/* Reset: Port 4 (PE), Pin 10, Active Low (1) */
-				reset-gpios = <&pio 4 10 1>; 
+				reset-gpios = <&pio 3 0 1>; 
 			};
 		};
 
@@ -158,7 +295,22 @@
 			dma-names = "rx", "tx";
 			status = "okay";
 			pinctrl-names = "default";
-			pinctrl-0 = <&i2s0_pe_pins>;
+			pinctrl-0 = <&i2s0_pd_pins>;
+		};
+
+		timer@1c20c00 {
+			compatible = "allwinner,suniv-f1c100s-timer";
+			reg = <0x01c20c00 0x90>;
+			interrupts = <13>, <14>, <15>;
+			clocks = <&osc24M>;
+		};
+
+		wdt: watchdog@1c20ca0 {
+			compatible = "allwinner,suniv-f1c100s-wdt",
+				     "allwinner,sun6i-a31-wdt";
+			reg = <0x01c20ca0 0x20>;
+			interrupts = <16>;
+			clocks = <&osc32k>;
 		};
 
 		/* DMA Controller */
@@ -174,18 +326,5 @@
 		};
 	};
 
-	/* Root Clocks */
-	osc24M: osc24M_clk {
-		#clock-cells = <0>;
-		compatible = "fixed-clock";
-		clock-frequency = <24000000>;
-		clock-output-names = "osc24M";
-	};
-
-	osc32k: osc32k_clk {
-		#clock-cells = <0>;
-		compatible = "fixed-clock";
-		clock-frequency = <32768>;
-		clock-output-names = "osc32k";
-	};
+	
 };

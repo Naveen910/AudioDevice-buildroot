@@ -3,6 +3,7 @@ buildroot/
 buildroot-2023.02.9.tar.gz
 testing/dts_includes/
 testing/suniv-f1c100s-custom-audio-board.dtb
+output-images/
 # Ignore build artifacts and images
 output/
 build-output/
