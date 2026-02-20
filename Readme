@@ -3,7 +3,7 @@ mkdir -p build-output
 # 2. Build the Docker image
 docker build -t f1c100s-buildroot .
 # 3. Run the builder
-docker run --rm -it \
+docker run -it \
   -v "$(pwd)":/project \
   -w /project \
   -e TAR_OPTIONS=--no-same-owner \

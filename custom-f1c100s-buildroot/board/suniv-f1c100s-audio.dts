@@ -2,6 +2,10 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/clock/suniv-ccu-f1c100s.h>
+#include <dt-bindings/reset/suniv-ccu-f1c100s.h>
+#include <dt-bindings/dma/sun4i-a10.h>
+
 
 / {
 	model = "F1C100s Custom Audio Board";
@@ -68,28 +72,28 @@
 	 * Links the I2S controller (CPU) to the MAX98357A (Codec)
 	 */
 	sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,name = "F1C100s-MAX98357A";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,mclk-fs = <512>;
-		
-		simple-audio-card,bitclock-master = <&dailink_master>;
-		simple-audio-card,frame-master = <&dailink_master>;
-		
-		/* Define Widgets for ALSA Routing */
-		simple-audio-card,widgets =
-			"Speaker", "External Speaker";
-		simple-audio-card,routing =
-			"External Speaker", "Speaker";
-
-		dailink_master: simple-audio-card,cpu {
-			sound-dai = <&i2s0>;
-		};
-
-		simple-audio-card,codec {
-			sound-dai = <&max98357a>;
-		};
+    	compatible = "simple-audio-card";
+    	simple-audio-card,name = "F1C100s-MAX98357A";
+    	simple-audio-card,format = "i2s";
+	
+    	simple-audio-card,bitclock-master = <&i2s0>;
+    	simple-audio-card,frame-master = <&i2s0>;
+	
+    	simple-audio-card,widgets =
+    	    "Speaker", "External Speaker";
+	
+    	simple-audio-card,routing =
+    	    "External Speaker", "Speaker";
+	
+    	simple-audio-card,cpu {
+    	    sound-dai = <&i2s0>;
+    	};
+	
+    	simple-audio-card,codec {
+    	    sound-dai = <&max98357a>;
+    	};
 	};
+
 
 	/*
 	 * GPIO Keys Input Device
@@ -99,12 +103,11 @@
 	gpio_keys {
 		compatible = "gpio-keys";
 		pinctrl-names = "default";
-		pinctrl-0 = <&button_pins>;
 		autorepeat;
 
 		/* B1 - Play/Pause - PD2 */
 		button_play {
-			label = "Play/Pause";
+			label = "PlayPause";
 			linux,code = <1>;
 			gpios = <&pio 3 2 GPIO_ACTIVE_LOW>; /* Bank 3 (PD) Pin 2 */
 			wakeup-source;
@@ -284,31 +287,23 @@
 				function = "i2s";
 			};
 
-			/* 
-			 * New Pin Group for Buttons
-			 * Sets PD2-PD7 and PD15-PD19 to GPIO Input mode
-			 */
-			button_pins: button-pins {
-				pins = "PD2", "PD3", "PD4", "PD5", "PD6", "PD7",
-				       "PD15", "PD16", "PD17", "PD18", "PD19";
-				function = "gpio_in";
-				bias-pull-up;
-			};
+			
 		};
 
 		/* UART0 */
 		uart0: serial@1c25000 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "snps,dw-apb-uart", "allwinner,suniv-f1c100s-uart", "allwinner,sun8i-a23-uart";
 			reg = <0x01c25000 0x400>;
 			interrupts = <1>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
-			clocks = <&ccu 20>;
-			resets = <&ccu 6>;
-			status = "okay";
-			pinctrl-names = "default";
-			pinctrl-0 = <&uart0_pe_pins>;
+			clocks = <&ccu CLK_BUS_UART0>;
+			resets = <&ccu RST_BUS_UART0>;
+			status = "disabled";
 		};
+
+
+
 
 		/* I2C0 */
 		i2c0: i2c@1c27000 {
@@ -336,6 +331,7 @@
 		/* I2S0 */
 		i2s0: i2s@1c22000 {
 			compatible = "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
+			#sound-dai-cells = <0>;
 			reg = <0x01c22000 0x400>;
 			interrupts = <28>;
 			clocks = <&ccu 22>, <&ccu 47>;

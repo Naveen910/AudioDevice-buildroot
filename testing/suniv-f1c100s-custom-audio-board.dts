@@ -2,6 +2,10 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/clock/suniv-ccu-f1c100s.h>
+#include <dt-bindings/reset/suniv-ccu-f1c100s.h>
+#include <dt-bindings/dma/sun4i-a10.h>
+
 
 / {
 	model = "F1C100s Custom Audio Board";
@@ -46,56 +50,38 @@
 		};
 	};
 
-	/* 
-	 * Main 3.3V Regulator 
-	 * Used by MMC, Audio Amp, and Pull-ups 
-	 */
-	reg_vcc3v3: vcc3v3 {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc3v3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-	};
 
-	/* MAX98357A External Amplifier */
 	max98357a: max98357a {
 		compatible = "maxim,max98357a";
 		#sound-dai-cells = <0>;
 	};
 
-	/* 
-	 * Sound Card Configuration 
-	 * Links the I2S controller (CPU) to the MAX98357A (Codec)
-	 */
+	
 	sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,name = "F1C100s-MAX98357A";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,mclk-fs = <512>;
-		
-		simple-audio-card,bitclock-master = <&dailink_master>;
-		simple-audio-card,frame-master = <&dailink_master>;
-		
-		/* Define Widgets for ALSA Routing */
-		simple-audio-card,widgets =
-			"Speaker", "External Speaker";
-		simple-audio-card,routing =
-			"External Speaker", "Speaker";
-
-		dailink_master: simple-audio-card,cpu {
-			sound-dai = <&i2s0>;
-		};
-
-		simple-audio-card,codec {
-			sound-dai = <&max98357a>;
-		};
+    	compatible = "simple-audio-card";
+    	simple-audio-card,name = "F1C100s-MAX98357A";
+    	simple-audio-card,format = "i2s";
+	
+    	simple-audio-card,bitclock-master = <&i2s0>;
+    	simple-audio-card,frame-master = <&i2s0>;
+	
+    	simple-audio-card,widgets =
+    	    "Speaker", "External Speaker";
+	
+    	simple-audio-card,routing =
+    	    "External Speaker", "Speaker";
+	
+    	simple-audio-card,cpu {
+    	    sound-dai = <&i2s0>;
+    	};
+	
+    	simple-audio-card,codec {
+    	    sound-dai = <&max98357a>;
+    	};
 	};
 
-	/*
-	 * GPIO Keys Input Device
-	 * Maps physical buttons B1-B11 from netlist to Linux Event Codes.
-	 * Configured as Active Low (pressed = 0V) with Pull-Ups.
-	 */
+
+	
 	gpio_keys {
 		compatible = "gpio-keys";
 		pinctrl-names = "default";
@@ -103,7 +89,7 @@
 
 		/* B1 - Play/Pause - PD2 */
 		button_play {
-			label = "Play/Pause";
+			label = "PlayPause";
 			linux,code = <1>;
 			gpios = <&pio 3 2 GPIO_ACTIVE_LOW>; /* Bank 3 (PD) Pin 2 */
 			wakeup-source;
@@ -180,14 +166,12 @@
 		};
 	};
 
-	/* SOC DEFINITIONS */
 	soc {
 		compatible = "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
 
-		/* Corrected Syntax: Removed non-breaking spaces in compatible string */
 		sram-controller@1c00000 {
 			compatible = "allwinner,suniv-f1c100s-system-control",
 				     "allwinner,sun4i-a10-system-control";
@@ -203,7 +187,6 @@
 				#size-cells = <1>;
 				ranges = <0 0x00010000 0x1000>;
 
-				/* Corrected Syntax: Removed non-breaking spaces */
 				otg_sram: sram-section@0 {
 					compatible = "allwinner,suniv-f1c100s-sram-d",
 						     "allwinner,sun4i-a10-sram-d";
@@ -213,24 +196,26 @@
 			};
 		};
 
+
 		mmc0: mmc@1c0f000 {
-			compatible = "allwinner,suniv-f1c100s-mmc", "allwinner,sun7i-a20-mmc";
+			compatible = "allwinner,suniv-f1c100s-mmc",
+				     "allwinner,sun7i-a20-mmc";
 			reg = <0x01c0f000 0x1000>;
-			clocks = <&ccu 7>, <&ccu 29>, <&ccu 30>, <&ccu 31>;
+			clocks = <&ccu CLK_BUS_MMC0>,
+				 <&ccu CLK_MMC0>,
+				 <&ccu CLK_MMC0_OUTPUT>,
+				 <&ccu CLK_MMC0_SAMPLE>;
 			clock-names = "ahb", "mmc", "output", "sample";
-			resets = <&ccu 5>;
+			resets = <&ccu RST_BUS_MMC0>;
 			reset-names = "ahb";
 			interrupts = <23>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&mmc0_pins>;
-			vmmc-supply = <&reg_vcc3v3>; /* Added missing regulator supply */
-			bus-width = <4>;
 			status = "okay";
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
 
-		/* Interrupt Controller */
 		intc: interrupt-controller@1c20400 {
 			compatible = "allwinner,suniv-f1c100s-ic";
 			reg = <0x01c20400 0x400>;
@@ -238,7 +223,6 @@
 			#interrupt-cells = <1>;
 		};
 
-		/* Clock Control Unit */
 		ccu: clock@1c20000 {
 			compatible = "allwinner,suniv-f1c100s-ccu";
 			reg = <0x01c20000 0x400>;
@@ -248,13 +232,11 @@
 			#reset-cells = <1>;
 		};
 
-		/* Pin Controller (PIO) */
 		pio: pinctrl@1c20800 {
 			compatible = "allwinner,suniv-f1c100s-pinctrl";
 			reg = <0x01c20800 0x400>;
 			interrupts = <38>, <39>, <40>;
-			
-			clocks = <&ccu 19>, <&osc24M>, <&osc32k>;
+			clocks = <&ccu CLK_BUS_PIO>, <&osc24M>, <&osc32k>;
 			clock-names = "apb", "hosc", "losc";
 			gpio-controller;
 			interrupt-controller;
@@ -286,53 +268,48 @@
 			
 		};
 
-		/* UART0 */
 		uart0: serial@1c25000 {
 			compatible = "snps,dw-apb-uart";
 			reg = <0x01c25000 0x400>;
 			interrupts = <1>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
-			clocks = <&ccu 20>;
-			resets = <&ccu 6>;
+			clocks = <&ccu CLK_BUS_UART0>;
+			resets = <&ccu RST_BUS_UART0>;
 			status = "okay";
-			pinctrl-names = "default";
-			pinctrl-0 = <&uart0_pe_pins>;
 		};
 
-		/* I2C0 */
+
+
 		i2c0: i2c@1c27000 {
 			compatible = "allwinner,suniv-f1c100s-i2c", "allwinner,sun6i-a31-i2c";
 			reg = <0x01c27000 0x400>;
 			interrupts = <7>;
-			clocks = <&ccu 24>;
-			resets = <&ccu 11>;
+			clocks = <&ccu CLK_BUS_I2C0>;
+			resets = <&ccu RST_BUS_I2C0>;
 			status = "okay";
 			pinctrl-names = "default";
 			pinctrl-0 = <&i2c0_pe_pins>;
 
-			/* FM Radio - SI4703 */
 			si4703: fm-radio@10 {
 				compatible = "silabs,si470x";
 				reg = <0x10>;
-				/* Corrected Syntax: Removed invisible trailing character */
 				reset-gpios = <&pio 3 0 GPIO_ACTIVE_LOW>; /* PD0 */
-				/* Added Interrupt configuration */
 				interrupt-parent = <&pio>;
 				interrupts = <3 1 IRQ_TYPE_EDGE_FALLING>; /* Bank 3 (PD) Pin 1 */
 			};
 		};
 
-		/* I2S0 */
 		i2s0: i2s@1c22000 {
-			compatible = "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
+			compatible = "allwinner,sun6i-a31-i2s", "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
 			#sound-dai-cells = <0>;
 			reg = <0x01c22000 0x400>;
-			interrupts = <28>;
-			clocks = <&ccu 22>, <&ccu 47>;
+			interrupts = <35>;
+			clocks = <&ccu CLK_BUS_I2S0>, <&ccu CLK_I2S>;
 			clock-names = "apb", "mod";
-			resets = <&ccu 9>;
-			dmas = <&dma 3>, <&dma 3>;
+			resets = <&ccu RST_BUS_I2S0>;
+			dmas = <&dma SUN4I_DMA_NORMAL 0x0e>,
+					 <&dma SUN4I_DMA_NORMAL 0x0e>;
 			dma-names = "rx", "tx";
 			status = "okay";
 			pinctrl-names = "default";
@@ -346,7 +323,6 @@
 			clocks = <&osc24M>;
 		};
 
-		/* Corrected Syntax: Removed non-breaking spaces */
 		wdt: watchdog@1c20ca0 {
 			compatible = "allwinner,suniv-f1c100s-wdt",
 				     "allwinner,sun6i-a31-wdt";
@@ -355,20 +331,29 @@
 			clocks = <&osc32k>;
 		};
 
-		/* DMA Controller */
+
 		dma: dma-controller@1c02000 {
 			compatible = "allwinner,suniv-f1c100s-dma";
 			reg = <0x01c02000 0x1000>;
 			interrupts = <18>;
-			clocks = <&ccu 6>;
-			resets = <&ccu 4>;
-			/* 
-			 * Critical Update: sun4i/suniv DMA bindings typically use 2 cells.
-			 * <Phandle> <Request ID> <Flags>
-			 * If your specific kernel/dma-driver version enforces 1 cell, revert to .
-			 * Standard Mainline expects .
-			 */
-			#dma-cells = <1>;
+			clocks = <&ccu CLK_BUS_DMA>;
+			resets = <&ccu RST_BUS_DMA>;
+			#dma-cells = <2>;
 		};
+
+		codec: codec@1c23c00 {
+			#sound-dai-cells = <0>;
+			compatible = "allwinner,suniv-f1c100s-codec";
+			reg = <0x01c23c00 0x400>;
+			interrupts = <21>;
+			clocks = <&ccu CLK_BUS_CODEC>, <&ccu CLK_CODEC>;
+			clock-names = "apb", "codec";
+			dmas = <&dma SUN4I_DMA_NORMAL 12>,
+			       <&dma SUN4I_DMA_NORMAL 12>;
+			dma-names = "rx", "tx";
+			resets = <&ccu RST_BUS_CODEC>;
+			status = "okay";
+		};
+
 	};
 };
