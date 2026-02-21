@@ -50,10 +50,45 @@
 		};
 	};
 
+	vcc_pe: vcc-pe-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-pe";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	vcc_pd: vcc-pd-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-pd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	vcc_pf: vcc-pf-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-pf";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	vmmc_reg: vmmc-supply {
+		compatible = "regulator-fixed";
+		regulator-name = "vmmc";
+		regulator-min-microvolt = <3300000>; /* or 1800000 if card uses 1.8V */
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+
+
 
 	max98357a: max98357a {
 		compatible = "maxim,max98357a";
 		#sound-dai-cells = <0>;
+		status = "okay";
 	};
 
 	
@@ -72,12 +107,17 @@
     	    "External Speaker", "Speaker";
 	
     	simple-audio-card,cpu {
-    	    sound-dai = <&i2s0>;
-    	};
-	
-    	simple-audio-card,codec {
-    	    sound-dai = <&max98357a>;
-    	};
+			sound-dai = <&i2s0>;
+			#sound-dai-cells = <0>;
+			dai-name = "sun4i-i2s";
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&max98357a>;
+			#sound-dai-cells = <0>;
+			dai-name = "max98357a";
+			status = "okay";
+		};
 	};
 
 
@@ -212,6 +252,9 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <&mmc0_pins>;
 			status = "okay";
+
+			vmmc-supply = <&vmmc_reg>;
+			vqmmc-supply = <&vmmc_reg>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
@@ -276,6 +319,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART0>;
 			resets = <&ccu RST_BUS_UART0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart0_pe_pins>; 
 			status = "okay";
 		};
 
