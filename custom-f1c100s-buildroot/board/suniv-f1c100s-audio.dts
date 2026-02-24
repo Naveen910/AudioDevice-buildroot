@@ -88,6 +88,7 @@
 	max98357a: max98357a {
 		compatible = "maxim,max98357a";
 		#sound-dai-cells = <0>;
+		status = "okay";
 	};
 
 	
@@ -106,13 +107,20 @@
     	    "External Speaker", "Speaker";
 	
     	simple-audio-card,cpu {
-    	    sound-dai = <&i2s0>;
-    	};
-	
-    	simple-audio-card,codec {
-    	    sound-dai = <&max98357a>;
-    	};
+			sound-dai = <&i2s0>;
+			#sound-dai-cells = <0>;
+			dai-name = "sun4i-i2s";
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&max98357a>;
+			#sound-dai-cells = <0>;
+			dai-name = "max98357a";
+			status = "okay";
+		};
 	};
+
+	
 
 
 	
@@ -333,28 +341,28 @@
 			si4703: fm-radio@10 {
 				compatible = "silabs,si470x";
 				reg = <0x10>;
-				reset-gpios = <&pio 3 0 GPIO_ACTIVE_LOW>; /* PD0 */
+				reset-gpios = <&pio 3 0 GPIO_ACTIVE_LOW>; 
 				interrupt-parent = <&pio>;
-				interrupts = <3 1 IRQ_TYPE_EDGE_FALLING>; /* Bank 3 (PD) Pin 1 */
+				interrupts = <3 1 IRQ_TYPE_EDGE_FALLING>; 
 			};
 		};
 
 		i2s0: i2s@1c22000 {
-			compatible = "allwinner,sun6i-a31-i2s", "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
+			compatible = "allwinner,suniv-f1c100s-i2s", "allwinner,sun4i-a10-i2s";
 			#sound-dai-cells = <0>;
 			reg = <0x01c22000 0x400>;
 			interrupts = <35>;
 			clocks = <&ccu CLK_BUS_I2S0>, <&ccu CLK_I2S>;
 			clock-names = "apb", "mod";
 			resets = <&ccu RST_BUS_I2S0>;
-			dmas = <&dma SUN4I_DMA_NORMAL 0x0e>,
-					 <&dma SUN4I_DMA_NORMAL 0x0e>;
+			/* Added '0' as the first cell for normal DMA */
+			dmas = <&dma 0 0x0e>, <&dma 0 0x0e>;
 			dma-names = "rx", "tx";
 			status = "okay";
 			pinctrl-names = "default";
 			pinctrl-0 = <&i2s0_pd_pins>;
 		};
-
+		
 		timer@1c20c00 {
 			compatible = "allwinner,suniv-f1c100s-timer";
 			reg = <0x01c20c00 0x90>;
@@ -372,12 +380,13 @@
 
 
 		dma: dma-controller@1c02000 {
-			compatible = "allwinner,suniv-f1c100s-dma";
+			compatible = "allwinner,sun6i-dma", "allwinner,suniv-f1c100s-dma";
 			reg = <0x01c02000 0x1000>;
 			interrupts = <18>;
 			clocks = <&ccu CLK_BUS_DMA>;
 			resets = <&ccu RST_BUS_DMA>;
-			#dma-cells = <2>;
+			#dma-cells = <2>;     
+			status = "okay";
 		};
 
 		codec: codec@1c23c00 {
@@ -387,9 +396,8 @@
 			interrupts = <21>;
 			clocks = <&ccu CLK_BUS_CODEC>, <&ccu CLK_CODEC>;
 			clock-names = "apb", "codec";
-			dmas = <&dma SUN4I_DMA_NORMAL 12>,
-			       <&dma SUN4I_DMA_NORMAL 12>;
-			dma-names = "rx", "tx";
+			dmas = <&dma 0 12>, <&dma 0 12>; 
+			dma-names = "rx", "tx"; 
 			resets = <&ccu RST_BUS_CODEC>;
 			status = "okay";
 		};
