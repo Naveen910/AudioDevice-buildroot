@@ -110,6 +110,7 @@
 			sound-dai = <&i2s0>;
 			#sound-dai-cells = <0>;
 			dai-name = "sun4i-i2s";
+			status = "okay";
 		};
 
 		simple-audio-card,codec {
