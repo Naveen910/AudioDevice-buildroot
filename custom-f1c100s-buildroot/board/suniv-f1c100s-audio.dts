@@ -96,6 +96,8 @@
     	compatible = "simple-audio-card";
     	simple-audio-card,name = "F1C100s-MAX98357A";
     	simple-audio-card,format = "i2s";
+
+		simple-audio-card,mclk-fs = <256>; 
 	
     	simple-audio-card,bitclock-master = <&i2s0>;
     	simple-audio-card,frame-master = <&i2s0>;
@@ -108,8 +110,6 @@
 	
     	simple-audio-card,cpu {
 			sound-dai = <&i2s0>;
-			#sound-dai-cells = <0>;
-			dai-name = "sun4i-i2s";
 			status = "okay";
 		};
 
@@ -350,7 +350,7 @@
 
 		i2s0: i2s@1c22000 {
 			#sound-dai-cells = <0>;
-			compatible = "allwinner,sun6i-a31-i2s";
+			compatible = "allwinner,sun4i-a10-i2s";
 			reg = <0x01c22000 0x400>;
 			interrupts = <35>;
 			clocks = <&ccu CLK_BUS_I2S0>, <&ccu CLK_I2S>;
@@ -402,6 +402,10 @@
 				 <&dma SUN4I_DMA_NORMAL 0x0c>;
 			dma-names = "rx", "tx";
 			status = "okay";
+			allwinner,audio-routing =
+				"Headphone", "HP",
+				"Headphone", "HPCOM",
+				"MIC", "Mic";
 		};
 
 	};

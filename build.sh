@@ -6,6 +6,10 @@ BUILDROOT_VERSION=2023.02.9
 BUILDROOT_DIR="buildroot"
 EXTERNAL_DIR="custom-f1c100s-buildroot"
 
+PROJECT_DIR="$(pwd)"
+EXTERNAL_PATH="${PROJECT_DIR}/${EXTERNAL_DIR}"
+DEFCONFIG_PATH="${EXTERNAL_PATH}/configs/my_defconfig"
+
 O="/tmp/br-output"
 DL="/tmp/br-dl"
 
@@ -32,33 +36,54 @@ make O="$O" \
      BR2_EXTERNAL="../${EXTERNAL_DIR}" \
      my_defconfig
 
-# ---- If user wants interactive config ----
+# ---- Interactive configuration mode ----
 if [ "$1" = "menu" ]; then
 
-    echo "Opening Buildroot menuconfig..."
-    make O="$O" \
-         BR2_DL_DIR="$DL" \
-         BR2_EXTERNAL="../${EXTERNAL_DIR}" \
-         menuconfig
+    echo ""
+    echo "Entering interactive configuration shell..."
+    echo ""
+    echo "Run any of the following:"
+    echo "  make menuconfig"
+    echo "  make linux-menuconfig"
+    echo "  make busybox-menuconfig"
+    echo ""
+    echo "When finished, type: exit"
+    echo ""
 
+    export MAKEFLAGS="O=$O BR2_DL_DIR=$DL BR2_EXTERNAL=$EXTERNAL_PATH"
+
+    bash --noprofile --norc
+
+    echo ""
     echo "Saving Buildroot defconfig..."
     make O="$O" \
          BR2_DL_DIR="$DL" \
-         BR2_EXTERNAL="../${EXTERNAL_DIR}" \
+         BR2_EXTERNAL="$EXTERNAL_PATH" \
          savedefconfig \
-         BR2_DEFCONFIG="../${EXTERNAL_DIR}/configs/my_defconfig"
+         BR2_DEFCONFIG="$DEFCONFIG_PATH"
 
-    echo "Opening Linux kernel menuconfig..."
-    make O="$O" \
-         BR2_DL_DIR="$DL" \
-         BR2_EXTERNAL="../${EXTERNAL_DIR}" \
-         linux-menuconfig
+    # Save kernel config if exists
+    if ls "$O/build" | grep -q linux 2>/dev/null; then
+        echo "Saving Linux kernel defconfig..."
+        make O="$O" \
+             BR2_DL_DIR="$DL" \
+             BR2_EXTERNAL="$EXTERNAL_PATH" \
+             linux-update-defconfig
+    fi
 
-    echo "Saving Linux kernel defconfig..."
-    make O="$O" \
-         BR2_DL_DIR="$DL" \
-         BR2_EXTERNAL="../${EXTERNAL_DIR}" \
-         linux-update-defconfig
+    # Save BusyBox config if exists
+    if ls "$O/build" | grep -q busybox 2>/dev/null; then
+        echo "Saving BusyBox config..."
+        make O="$O" \
+             BR2_DL_DIR="$DL" \
+             BR2_EXTERNAL="$EXTERNAL_PATH" \
+             busybox-update-config
+    fi
+
+    echo ""
+    echo "All configurations saved successfully!"
+    echo ""
+    exit 0
 fi
 
 # ---- Final build ----
