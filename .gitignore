@@ -16,3 +16,4 @@ Thumbs.db
 
 # Ignore Docker build contexts if any (optional)
 .dockerignore
+testing/preprocessed.dts
