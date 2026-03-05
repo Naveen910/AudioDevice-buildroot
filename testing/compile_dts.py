@@ -26,6 +26,7 @@ FILES_TO_FETCH = {
     f"{BASE_URL_BINDINGS}/clock/suniv-ccu-f1c100s.h": "dt-bindings/clock/suniv-ccu-f1c100s.h",
     f"{BASE_URL_BINDINGS}/reset/suniv-ccu-f1c100s.h": "dt-bindings/reset/suniv-ccu-f1c100s.h",
     f"{BASE_URL_BINDINGS}/dma/sun4i-a10.h": "dt-bindings/dma/sun4i-a10.h",
+    f"{BASE_URL_BINDINGS}/clock/sun4i-a10-ccu.h": "dt-bindings/clock/sun4i-a10-ccu.h",
 }
 
 def clean_old_files():

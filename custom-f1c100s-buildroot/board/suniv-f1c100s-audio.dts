@@ -352,12 +352,11 @@
 			#sound-dai-cells = <0>;
 			compatible = "allwinner,sun4i-a10-i2s";
 			reg = <0x01c22000 0x400>;
-			interrupts = <35>;
+			interrupts = <16>;
 			clocks = <&ccu CLK_BUS_I2S0>, <&ccu CLK_I2S>;
 			clock-names = "apb", "mod";
-			resets = <&ccu RST_BUS_I2S0>;
-			dmas = <&dma SUN4I_DMA_NORMAL 0x0e>,
-				   <&dma SUN4I_DMA_NORMAL 0x0e>;
+			dmas = <&dma SUN4I_DMA_NORMAL 5>,
+			       <&dma SUN4I_DMA_NORMAL 5>;
 			dma-names = "rx", "tx";
 			status = "okay";
 			pinctrl-names = "default";

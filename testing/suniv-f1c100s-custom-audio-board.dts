@@ -85,22 +85,22 @@
 
 
 
-	max98357a: max98357@0 {
+	max98357a: max98357a {
 		compatible = "maxim,max98357a";
 		#sound-dai-cells = <0>;
 		status = "okay";
 	};
 
 	
-sound {
+	sound {
     	compatible = "simple-audio-card";
     	simple-audio-card,name = "F1C100s-MAX98357A";
     	simple-audio-card,format = "i2s";
 
 		simple-audio-card,mclk-fs = <256>; 
 	
-    	simple-audio-card,bitclock-master = <&cpu_dai>;
-    	simple-audio-card,frame-master = <&cpu_dai>;
+    	simple-audio-card,bitclock-master = <&i2s0>;
+    	simple-audio-card,frame-master = <&i2s0>;
 	
     	simple-audio-card,widgets =
     	    "Speaker", "External Speaker";
@@ -108,14 +108,15 @@ sound {
     	simple-audio-card,routing =
     	    "External Speaker", "Speaker";
 	
-    	cpu_dai: simple-audio-card,cpu {
-    	    sound-dai = <&i2s0>;
-    	    mclk-fs = <256>;  /* Or 384/512; 256 is common for 48 kHz */
+    	simple-audio-card,cpu {
+			sound-dai = <&i2s0>;
 			status = "okay";
 		};
 
-		codec_dai: simple-audio-card,codec {
+		simple-audio-card,codec {
 			sound-dai = <&max98357a>;
+			#sound-dai-cells = <0>;
+			dai-name = "max98357a";
 			status = "okay";
 		};
 	};
@@ -349,13 +350,12 @@ sound {
 
 		i2s0: i2s@1c22000 {
 			#sound-dai-cells = <0>;
-			compatible = "allwinner,sun6i-a31-i2s";
+			compatible = "allwinner,sun4i-a10-i2s";
 			reg = <0x01c22000 0x400>;
-			interrupts = <35>;
+			interrupts = <16>;
 			clocks = <&ccu CLK_BUS_I2S0>, <&ccu CLK_I2S>;
 			clock-names = "apb", "mod";
-			resets = <&ccu RST_BUS_I2S0>;
-			dmas = <&dma 3>, <&dma 3>;
+			dmas = <&dma SUN4I_DMA_NORMAL 3 0>, <&dma SUN4I_DMA_NORMAL 3 0>;
 			dma-names = "rx", "tx";
 			status = "okay";
 			pinctrl-names = "default";
