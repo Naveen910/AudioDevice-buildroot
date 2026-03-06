@@ -95,8 +95,9 @@
     	compatible = "simple-audio-card";
     	simple-audio-card,name = "F1C100s-MAX98357A";
     	simple-audio-card,format = "i2s";
-
 		simple-audio-card,mclk-fs = <256>; 
+
+		status="okay";
 	
     	simple-audio-card,cpu {
 			sound-dai = <&i2s0>;
@@ -343,6 +344,7 @@
 			interrupts = <16>;
 			clocks = <&ccu CLK_BUS_I2S0>, <&ccu CLK_I2S>;
 			clock-names = "apb", "mod";
+			resets = <&ccu RST_BUS_I2S0>;
 			dmas = <&dma SUN4I_DMA_NORMAL 3>,
 			       <&dma SUN4I_DMA_NORMAL 3>;
 			dma-names = "rx", "tx";
