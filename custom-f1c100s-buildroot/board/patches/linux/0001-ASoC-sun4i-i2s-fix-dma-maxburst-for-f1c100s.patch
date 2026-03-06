@@ -1,0 +1,30 @@
+From: Custom Buildroot User
+Subject: ASoC: sunxi: sun4i-i2s: Limit DMA maxburst to 4 for F1C100s
+
+The F1C100s (suniv) DMA controller strictly supports a maximum burst
+size of 4 words. The default sun4i-a10-i2s configuration requests a 
+burst size of 8, which causes a DMA channel allocation failure 
+(-ENOMEM) during the ALSA trigger phase.
+
+This patch limits the maxburst to 4 to prevent bus faults and enable
+successful I2S audio playback on the F1C100s.
+
+---
+ sound/soc/sunxi/sun4i-i2s.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/sunxi/sun4i-i2s.c b/sound/soc/sunxi/sun4i-i2s.c
+--- a/sound/soc/sunxi/sun4i-i2s.c
++++ b/sound/soc/sunxi/sun4i-i2s.c
+@@ -1341,10 +1341,10 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
+ 
+ 	i2s->playback_dma_data.addr = res->start +
+ 					i2s->variant->reg_offset_txdata;
+-	i2s->playback_dma_data.maxburst = 8;
++	i2s->playback_dma_data.maxburst = 4;
+ 
+ 	i2s->capture_dma_data.addr = res->start + SUN4I_I2S_FIFO_RX_REG;
+-	i2s->capture_dma_data.maxburst = 8;
++	i2s->capture_dma_data.maxburst = 4;
+ 
+ 	dev_set_drvdata(&pdev->dev, i2s);
